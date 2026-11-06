@@ -113,7 +113,7 @@ class Ranking extends StatelessWidget{const Ranking({super.key});@override Widge
 
 class History extends StatelessWidget{const History({super.key});@override Widget build(BuildContext context)=>FutureBuilder(future:Future.wait([DB.instance.matches(),DB.instance.players()]),builder:(c,s){
   if(!s.hasData)return const Center(child:CircularProgressIndicator());final ms=s.data![0],ps=s.data![1];final names={for(final p in ps)p['id'] as int:p['name'] as String};if(ms.isEmpty)return const Empty('Completed matches will appear here.');
-  return ListView(padding:const EdgeInsets.all(14),children:ms.map((m)=>Card(child:ListTile(title:Text('${names[m['p1']]??'Player'} vs ${names[m['p2']]??'Player'}'),subtitle:Text('${m['playedAt'].toString().substring(0,16)} • ${names[m['winner']]??'Winner'} won'),trailing:Text('${m['s1']} - ${m['s2']}',style:const TextStyle(color:lime,fontWeight:FontWeight.bold)))).toList());
+  return ListView(padding:const EdgeInsets.all(14),children:ms.map<Widget>((m)=>Card(child:ListTile(title:Text('${names[m['p1']]??'Player'} vs ${names[m['p2']]??'Player'}'),subtitle:Text('${m['playedAt'].toString().substring(0,16)} • ${names[m['winner']]??'Winner'} won'),trailing:Text('${m['s1']} - ${m['s2']}',style:const TextStyle(color:lime,fontWeight:FontWeight.bold)))).toList());
 });}
 
 
