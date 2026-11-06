@@ -1,0 +1,59 @@
+name: Build Android APK
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+
+permissions:
+  contents: read
+
+jobs:
+  build-apk:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - name: Generate Android project files
+        run: flutter create . --platforms=android
+      - name: Add Android permissions
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('android/app/src/main/AndroidManifest.xml')
+          s = p.read_text()
+          marker = '<manifest'
+          pos = s.find('>')
+          if pos < 0:
+              raise SystemExit('AndroidManifest.xml has no manifest opening tag')
+          permissions = [
+              '    <uses-permission android:name="android.permission.RECORD_AUDIO"/>',
+              '    <uses-permission android:name="android.permission.INTERNET"/>',
+          ]
+          for permission in permissions:
+              name = permission.split('name="')[1].split('"')[0]
+              if name not in s:
+                  s = s[:pos+1] + '\n' + permission + s[pos+1:]
+                  pos = s.find('>', s.find('<manifest'))
+          p.write_text(s)
+          PY
+      - name: Resolve dependencies
+        run: flutter pub get
+      - name: Build release APK
+        run: flutter build apk --release
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: tennis-voice-score-apk
+          path: build/app/outputs/flutter-apk/app-release.apk
+          if-no-files-found: error
